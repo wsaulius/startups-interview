@@ -1,9 +1,8 @@
 package com.uber;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+import java.lang.ref.WeakReference;
+import java.math.BigInteger;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -18,37 +17,40 @@ Check if the number has this property: the number rotated 180 degrees equals its
  Convertable numbers as agreed: 0, 1, 6, 8, 9
 */
 
-// Main class should be named 'Solution'
+// Main class should be named 'Solution' 
 class Solution {
 
     static final String STATE_AS_SAME = "OK, can be 180 degree rotated";
     static final String STATE_DIFF = "not convertible";
 
-    static final List convertibles =
-            IntStream.of(0, 1, 6, 8, 9).map(i -> 48 + i).sorted().boxed().collect(Collectors.toList());
+    static final List<Integer> convertibleDigits = Stream.of(0, 1, 6, 8, 9).collect(Collectors.toList());
+
+    static final List<Integer> convertibles =
+            convertibleDigits.stream().map(upDownDigit -> 48 + upDownDigit).sorted().collect(Collectors.toList());
 
     public static Predicate<Integer> is180DegreePalindrome() {
         return Solution::test;
     }
 
     private static boolean test(Integer digit) {
-
         // Convert to Integers
-        final List<Integer> asList = Integer.toString(digit).chars().boxed().collect(Collectors.toList());
+        final List<WeakReference<Integer>> asList =
+                Integer.toString(digit).chars().boxed().map(WeakReference::new)
+                        .collect(Collectors.toList());
 
-        ListIterator<Integer> iif = asList.listIterator();
+        ListIterator<WeakReference<Integer>> listIterator = asList.listIterator();
 
         // Memoizing attempt
-        final Map<Integer, Integer> matchTable = new HashMap<>(asList.size());
+        final Map<Integer, Integer> matchTable = new WeakHashMap<>(asList.size());
 
         // Move iterator to end
-        while (iif.hasNext()) {
-            matchTable.putIfAbsent(iif.next(), 0);
+        while (listIterator.hasNext()) {
+            matchTable.putIfAbsent(listIterator.next().get(), 0);
         }
 
-        for (int i = 0; iif.hasPrevious(); i++) {
+        for (int i = 0; listIterator.hasPrevious(); i++) {
 
-            final Integer intFromBack = iif.previous();
+            final Integer intFromBack = Objects.requireNonNull(listIterator.previous().get());
             if (convertibles.contains(intFromBack)) {
 
                 switch (intFromBack) {
@@ -57,7 +59,13 @@ class Solution {
                     case 57:
 
                         // Quick cases
-                        int intGap = Math.abs(intFromBack - asList.get(i));
+                        if (asList.size() == 1) {
+                            System.out.printf("%s is %s.\n\n", digit, STATE_AS_SAME);
+                            return true;
+                        }
+
+                        int intGap = Math.abs(intFromBack -
+                                Objects.requireNonNull(asList.get(i).get()));
 
                         // Another quick case
                         if (intGap == 0) {
@@ -69,7 +77,10 @@ class Solution {
                         if (intGap == 3) {
 
                             // 6 - 9 case
-                            matchTable.computeIfPresent(asList.get(i), (key, value) -> value + 1);
+                            matchTable.computeIfPresent(
+                                    Objects.requireNonNull(
+                                            asList.get(i).get()), (key, value) -> value + 1);
+
                             // Match the "other" side
                             matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
 
@@ -84,7 +95,8 @@ class Solution {
                             return true;
                         }
 
-                        if (intFromBack.compareTo(asList.get(i)) == 0) {
+                        if (intFromBack.compareTo(
+                                Objects.requireNonNull(asList.get(i).get())) == 0) {
 
                             matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
                         } else {
@@ -104,7 +116,7 @@ class Solution {
         final long allUnmatched = matchTable.values()
                 .stream().filter(integer -> (integer % 2 != 0)).count();
 
-        boolean isPalindromic = !matchTable.containsValue(-1) && allUnmatched <= 1;
+        boolean isPalindromic = allUnmatched <= 1 && !matchTable.containsValue(-1);
 
         System.out.printf("%s is %s.\n\n", digit, ((isPalindromic) ? STATE_AS_SAME : STATE_DIFF));
         return isPalindromic;
@@ -112,16 +124,32 @@ class Solution {
 
     public static void main(String[] args) {
 
+        Random random = new Random( 4 );
+        final List<Integer> testBigNumbers = new LinkedList<>();
+
+        convertibleDigits.forEach( upDownDigit ->
+                testBigNumbers.add(new BigInteger(String.valueOf(upDownDigit)
+                        .repeat( Math.abs( random.nextInt( 10 ) ) ) ).intValue() ) );
+
         Stream<Integer> upTo50 = IntStream.rangeClosed(0, 50).boxed();
 
         Stream<Integer> otherCases = Stream.of(69, 616, 919, 96161, 96896, 1968961, 88619, 8861988,
                 1967, 1961, 19061, 190061, 707, 808, 8001, 1001, 101, 110, 8800088,
                 818, 90, 88, 99, 66, 303).sorted();
 
-        final Stream<Integer> mergedStream = Stream.of(upTo50, otherCases.parallel()).flatMap(r -> r).sorted();
+        final Stream<Integer> mergedStream =
+                Stream.of( upTo50, otherCases, testBigNumbers.stream() )
+                .flatMap( integer -> integer ).sorted();
 
         // Print Convertibles tested
-        mergedStream.forEach(digit -> is180DegreePalindrome().test(digit));
+        mergedStream.forEach( digit -> is180DegreePalindrome().test(digit));
+
+        // Print Convertibles tested
+        Stream.of(6, 0, 1, 8, 9, 4, 10, 69, 616, 919, 96161, 96896, 1968961,
+                  1967, 1961, 19061, 190061, 707, 808, 8001, 1001, 101, 110,
+                  818, 90, 88, 99, 66, 303).sorted()
+                .forEach(digit -> is180DegreePalindrome().test(digit));
     }
+
 }
 
