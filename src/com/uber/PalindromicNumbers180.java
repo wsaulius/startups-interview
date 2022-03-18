@@ -24,88 +24,90 @@ class Solution {
     static final String STATE_AS_SAME = "OK, can be 180 degree rotated";
     static final String STATE_DIFF = "not convertible";
 
-    static final List convertables =
+    static final List convertibles =
             IntStream.of(0, 1, 6, 8, 9).map(i -> 48 + i).sorted().boxed().collect(Collectors.toList());
 
     public static Predicate<Integer> is180DegreePalindrome() {
-        return toSplit -> {
+        return Solution::test;
+    }
 
-            // Convert to Integers
-            final List<Integer> asList = Integer.toString(toSplit).chars().boxed().collect(Collectors.toList());
+    private static boolean test(Integer digit) {
 
-            ListIterator<Integer> iif = asList.listIterator();
+        // Convert to Integers
+        final List<Integer> asList = Integer.toString(digit).chars().boxed().collect(Collectors.toList());
 
-            // Memoizing attempt
-            final Map<Integer, Integer> matchTable = new HashMap<>(asList.size());
+        ListIterator<Integer> iif = asList.listIterator();
 
-            // Move iterator to end
-            while (iif.hasNext()) {
-                matchTable.putIfAbsent(iif.next(), 0);
-            }
+        // Memoizing attempt
+        final Map<Integer, Integer> matchTable = new HashMap<>(asList.size());
 
-            for (int i = 0; iif.hasPrevious(); i++) {
+        // Move iterator to end
+        while (iif.hasNext()) {
+            matchTable.putIfAbsent(iif.next(), 0);
+        }
 
-                final Integer intFromBack = iif.previous();
-                if (convertables.contains(intFromBack)) {
+        for (int i = 0; iif.hasPrevious(); i++) {
 
-                    switch (intFromBack) {
+            final Integer intFromBack = iif.previous();
+            if (convertibles.contains(intFromBack)) {
 
-                        case 54:
-                        case 57:
+                switch (intFromBack) {
 
-                            // Quick cases
-                            int intGap = Math.abs(intFromBack - asList.get(i));
+                    case 54:
+                    case 57:
 
-                            // Another quick case
-                            if (intGap == 0) {
-                                System.out.printf("%s is %s.\n\n", toSplit, STATE_DIFF);
-                                return false;
-                            }
+                        // Quick cases
+                        int intGap = Math.abs(intFromBack - asList.get(i));
 
-                            // Difference between '6' and '9'
-                            if (intGap == 3) {
+                        // Another quick case
+                        if (intGap == 0) {
+                            System.out.printf("%s is %s.\n\n", digit, STATE_DIFF);
+                            return false;
+                        }
 
-                                // 6 - 9 case
-                                matchTable.computeIfPresent(asList.get(i), (key, value) -> value + 1);
-                                // Match the "other" side
-                                matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
+                        // Difference between '6' and '9'
+                        if (intGap == 3) {
 
-                            }
-                            break;
+                            // 6 - 9 case
+                            matchTable.computeIfPresent(asList.get(i), (key, value) -> value + 1);
+                            // Match the "other" side
+                            matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
 
-                        default:
+                        }
+                        break;
 
-                            // Quick cases
-                            if (asList.size() == 1) {
-                                System.out.printf("%s is %s.\n\n", toSplit, STATE_AS_SAME);
-                                return true;
-                            }
+                    default:
 
-                            if (intFromBack.compareTo(asList.get(i)) == 0) {
+                        // Quick cases
+                        if (asList.size() == 1) {
+                            System.out.printf("%s is %s.\n\n", digit, STATE_AS_SAME);
+                            return true;
+                        }
 
-                                matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
-                            } else {
+                        if (intFromBack.compareTo(asList.get(i)) == 0) {
 
-                                matchTable.computeIfPresent(intFromBack, (key, value) -> -1);
-                            }
-                            break;
-                    }
-                } else {
+                            matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
+                        } else {
 
-                    matchTable.computeIfPresent(intFromBack, (key, value) -> -1);
+                            matchTable.computeIfPresent(intFromBack, (key, value) -> -1);
+                        }
+                        break;
                 }
+            } else {
 
-                // System.out.println(matchTable);
+                matchTable.computeIfPresent(intFromBack, (key, value) -> -1);
             }
 
-            final long allUnmatched = matchTable.values()
-                    .stream().filter(integer -> (integer % 2 != 0)).count();
+            // System.out.println(matchTable);
+        }
 
-            boolean isPalindromic = !matchTable.containsValue(-1) && allUnmatched <= 1;
+        final long allUnmatched = matchTable.values()
+                .stream().filter(integer -> (integer % 2 != 0)).count();
 
-            System.out.printf("%s is %s.\n\n", toSplit, ((isPalindromic) ? STATE_AS_SAME : STATE_DIFF));
-            return isPalindromic;
-        };
+        boolean isPalindromic = !matchTable.containsValue(-1) && allUnmatched <= 1;
+
+        System.out.printf("%s is %s.\n\n", digit, ((isPalindromic) ? STATE_AS_SAME : STATE_DIFF));
+        return isPalindromic;
     }
 
     public static void main(String[] args) {
