@@ -1,4 +1,4 @@
-package src.com.uber;
+package com.uber;
 
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
