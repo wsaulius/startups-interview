@@ -1,12 +1,19 @@
-package com.uber;
+package src.com.uber;
 
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static java.util.Objects.requireNonNull;
 
 /*
 Check if the number has this property: the number rotated 180 degrees equals its original value. Examples:
@@ -50,7 +57,7 @@ class Solution {
 
         for (int i = 0; listIterator.hasPrevious(); i++) {
 
-            final Integer intFromBack = Objects.requireNonNull(listIterator.previous().get());
+            final Integer intFromBack = requireNonNull(listIterator.previous().get());
             if (convertibles.contains(intFromBack)) {
 
                 switch (intFromBack) {
@@ -64,8 +71,7 @@ class Solution {
                             return true;
                         }
 
-                        int intGap = Math.abs(intFromBack -
-                                Objects.requireNonNull(asList.get(i).get()));
+                        int intGap = Math.abs(intFromBack - requireNonNull(asList.get(i).get()));
 
                         // Another quick case
                         if (intGap == 0) {
@@ -77,9 +83,7 @@ class Solution {
                         if (intGap == 3) {
 
                             // 6 - 9 case
-                            matchTable.computeIfPresent(
-                                    Objects.requireNonNull(
-                                            asList.get(i).get()), (key, value) -> value + 1);
+                            matchTable.computeIfPresent(requireNonNull( asList.get(i).get()), (key, value) -> value + 1);
 
                             // Match the "other" side
                             matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
@@ -95,8 +99,7 @@ class Solution {
                             return true;
                         }
 
-                        if (intFromBack.compareTo(
-                                Objects.requireNonNull(asList.get(i).get())) == 0) {
+                        if (intFromBack.compareTo(requireNonNull(asList.get(i).get())) == 0) {
 
                             matchTable.computeIfPresent(intFromBack, (key, value) -> value + 1);
                         } else {
@@ -131,7 +134,7 @@ class Solution {
                 testBigNumbers.add(new BigInteger(String.valueOf(upDownDigit)
                         .repeat( Math.abs( random.nextInt( 10 ) ) ) ).intValue() ) );
 
-        Stream<Integer> upTo50 = IntStream.rangeClosed(0, 50).boxed();
+        Stream<Integer> upTo50 = IntStream.rangeClosed(1, 50).boxed();
 
         Stream<Integer> otherCases = Stream.of(69, 616, 919, 96161, 96896, 1968961, 88619, 8861988,
                 1967, 1961, 19061, 190061, 707, 808, 8001, 1001, 101, 110, 8800088,
@@ -139,17 +142,11 @@ class Solution {
 
         final Stream<Integer> mergedStream =
                 Stream.of( upTo50, otherCases, testBigNumbers.stream() )
-                .flatMap( integer -> integer ).sorted();
+                        .flatMap( integer -> integer ).sorted();
 
         // Print Convertibles tested
         mergedStream.forEach( digit -> is180DegreePalindrome().test(digit));
 
-        // Print Convertibles tested
-        Stream.of(6, 0, 1, 8, 9, 4, 10, 69, 616, 919, 96161, 96896, 1968961,
-                  1967, 1961, 19061, 190061, 707, 808, 8001, 1001, 101, 110,
-                  818, 90, 88, 99, 66, 303).sorted()
-                .forEach(digit -> is180DegreePalindrome().test(digit));
     }
 
 }
-
