@@ -65,15 +65,9 @@ class Solution {
                     case 54:
                     case 57:
 
-                        // Quick cases
-                        if (asList.size() == 1) {
-                            System.out.printf("%s is %s.\n\n", digit, STATE_AS_SAME);
-                            return true;
-                        }
-
                         int intGap = Math.abs(intFromBack - requireNonNull(asList.get(i).get()));
 
-                        // Another quick case
+                        // Quick case for '6' or '9'
                         if (intGap == 0) {
                             System.out.printf("%s is %s.\n\n", digit, STATE_DIFF);
                             return false;
@@ -138,7 +132,7 @@ class Solution {
 
         Stream<Integer> otherCases = Stream.of(69, 616, 919, 96161, 96896, 1968961, 88619, 8861988,
                 1967, 1961, 19061, 190061, 707, 808, 8001, 1001, 101, 110, 8800088,
-                818, 90, 88, 99, 66, 303).sorted();
+                818, 90, 88, 99, 96, 66, 303).sorted();
 
         final Stream<Integer> mergedStream =
                 Stream.of( upTo50, otherCases, testBigNumbers.stream() )
@@ -146,7 +140,5 @@ class Solution {
 
         // Print Convertibles tested
         mergedStream.forEach( digit -> is180DegreePalindrome().test(digit));
-
     }
-
 }
